@@ -1,56 +1,70 @@
 <?php
-
 class ClienteController
 {
-    private $mysqli;
+    private $model;
 
-    public function __construct($mysqli)
+    public function __construct($model)
     {
-        $this->mysqli = $mysqli;
+        $this->model = $model;
     }
 
-    public function mostrarCrud()
+    public function cadastrar($dados)
     {
-        echo "<h2>CRUD Clientes</h2>";
-        echo "<a href='?action=logout'>Logout</a><br><br>";
+        // Verifica se o CPF já está cadastrado
+        if ($this->model->buscarClientePorCPF($dados['cpf'])) {
+            echo '<div class="alert alert-danger">Erro: CPF já cadastrado.</div>';
+            return false;
+        }
 
-        // Formulário para criar um novo cliente
-        echo "<h3>Adicionar Cliente</h3>";
-        echo '<form method="POST" action="?action=createCliente">
-                Nome: <input type="text" name="nome" required><br>
-                Telefone: <input type="text" name="telefone" required><br>
-                <input type="submit" value="Adicionar Cliente">
-              </form>';
-
-        // Exibir lista de clientes
-        echo "<h3>Clientes Cadastrados</h3>";
-        $result = $this->mysqli->query("SELECT * FROM CLIENTE");
-        while ($cliente = $result->fetch_assoc()) {
-            echo $cliente['nome'] . " - " . $cliente['telefone'];
-            echo " <a href='?action=deleteCliente&id=" . $cliente['id_cliente'] . "'>Deletar</a><br>";
+        // Cadastra o cliente
+        if ($this->model->cadastrarCliente($dados)) {
+            return true;
+        } else {
+            echo '<div class="alert alert-danger">Erro ao cadastrar cliente.</div>';
+            return false;
         }
     }
 
-    public function create($data)
+    public function buscarPorCPF($cpf)
     {
-        $nome = $this->mysqli->real_escape_string($data['nome']);
-        $telefone = $this->mysqli->real_escape_string($data['telefone']);
-
-        $sql = "INSERT INTO CLIENTE (nome, telefone) VALUES ('$nome', '$telefone')";
-        if ($this->mysqli->query($sql)) {
-            echo "Cliente adicionado com sucesso!";
+        $cliente = $this->model->buscarClientePorCPF($cpf);
+        if ($cliente) {
+            return $cliente;
         } else {
-            echo "Erro ao adicionar cliente: " . $this->mysqli->error;
+            echo '<div class="alert alert-danger">Cliente não encontrado.</div>';
+            return null;
         }
     }
 
-    public function delete($id)
+    public function atualizarCliente($dados)
     {
-        $sql = "DELETE FROM CLIENTE WHERE id_cliente = " . intval($id);
-        if ($this->mysqli->query($sql)) {
-            echo "Cliente deletado com sucesso!";
+        // Verifica se o cliente existe
+        if ($this->model->buscarClientePorCPF($dados['cpf'])) {
+            if ($this->model->atualizarCliente($dados)) {
+                return true;
+            } else {
+                echo '<div class="alert alert-danger">Erro ao atualizar cliente.</div>';
+                return false;
+            }
         } else {
-            echo "Erro ao deletar cliente: " . $this->mysqli->error;
+            echo '<div class="alert alert-danger">Erro: Cliente não encontrado.</div>';
+            return false;
+        }
+    }
+
+    public function excluirCliente($cpf)
+    {
+        // Verifica se o cliente existe
+        if ($this->model->buscarClientePorCPF($cpf)) {
+            if ($this->model->excluirCliente($cpf)) {
+                return true;
+            } else {
+                echo '<div class="alert alert-danger">Erro ao excluir cliente.</div>';
+                return false;
+            }
+        } else {
+            echo '<div class="alert alert-danger">Erro: Cliente não encontrado.</div>';
+            return false;
         }
     }
 }
