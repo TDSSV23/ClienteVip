@@ -1,4 +1,9 @@
 <!-- views/Layout/header_publico.php -->
+<?php
+// Variável base URL, garantindo o caminho correto para as páginas
+$base_url = '/ClienteVip';
+?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -12,21 +17,22 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="../../index.php">CRM Cliente VIP</a>
+            <a class="navbar-brand" href="<?php echo $base_url; ?>/index.php">CRM Cliente VIP</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarPublico">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarPublico">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="../cliente/login.php">Login</a>
+                        <a class="nav-link" href="<?php echo $base_url; ?>/app/Views/cliente/login.php">Login</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="../cliente/registro.php">Cadastre-se</a>
+                        <a class="nav-link" href="<?php echo $base_url; ?>/app/Views/cliente/registro.php">Cadastre-se</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 </body>
+
 </html>

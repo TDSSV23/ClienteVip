@@ -17,13 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($cliente && $cliente['senha'] == $senha) {
         $_SESSION['cliente'] = $cliente;
-        header('Location: ../../principal.php');
+        $_SESSION['cpf'] = $cliente['cpf']; // Adicionar o CPF na sessão
+        header('Location: ../../../principal.php');
         exit();
-    } else {
-        echo '<div class="alert alert-danger">Login ou senha incorretos.</div>';
     }
 }
 ?>
+
 <!DOCTYPE html>
 <html lang="pt-br">
 

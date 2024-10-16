@@ -11,7 +11,6 @@ $cliente = $_SESSION['cliente'];
 <html lang="pt-br">
 
 <head>
-    <?php include 'app/views/Layout/header.php'; ?>
     <title>Dashboard - Cliente VIP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -22,7 +21,7 @@ $cliente = $_SESSION['cliente'];
 
         <div id="content-wrapper" class="d-flex flex-column">
             <div id="content">
-                <?php include 'app/views/Layout/topbar.php'; ?>
+                <?php include 'app/views/Layout/header_logado.php'; ?>
 
                 <div class="container-fluid">
                     <h1 class="h3 mb-4 text-gray-800">Bem-vindo, <?php echo htmlspecialchars($cliente['nome']); ?></h1>
