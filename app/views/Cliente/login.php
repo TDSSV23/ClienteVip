@@ -1,8 +1,8 @@
 <?php
-require_once '../config.php';
-require_once '../app/Models/Database.php';
-require_once '../app/Models/ClienteModel.php';
-require_once '../app/Controllers/ClienteController.php';
+require_once '../../../config/db.php';
+require_once '../../Models/Database.php';
+require_once '../../Models/Cliente.php';
+require_once '../../Controllers/ClienteController.php';
 
 session_start();
 
@@ -10,12 +10,14 @@ $clienteModel = new ClienteModel();
 $clienteController = new ClienteController($clienteModel);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $cpf = $_POST['cpf'];
+    $cpf = preg_replace('/[^0-9]/', '', $_POST['cpf']);
     $senha = $_POST['senha'];
+
     $cliente = $clienteController->buscarPorCPF($cpf);
+
     if ($cliente && $cliente['senha'] == $senha) {
         $_SESSION['cliente'] = $cliente;
-        header('Location: dados_cliente.php');
+        header('Location: ../../principal.php');
         exit();
     } else {
         echo '<div class="alert alert-danger">Login ou senha incorretos.</div>';
@@ -24,12 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <?php include '../layout/header_publico.php'; ?>
     <title>Login</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
+
 <body>
     <div class="container mt-5">
         <h1>Login</h1>
@@ -43,5 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             <button type="submit" class="btn btn-primary">Entrar</button>
         </form>
     </div>
+    <?php include '../layout/footer.php'; ?>
 </body>
+
 </html>

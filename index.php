@@ -1,41 +1,23 @@
-<?php
-require_once 'config/db.php';
-require_once 'app/Models/Database.php';
-require_once 'app/Models/Cliente.php';
-require_once 'app/Controllers/ClienteController.php';
-
-$clienteModel = new ClienteModel();
-$clienteController = new ClienteController($clienteModel);
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $cpf = $_POST['cpf'];
-    $senha = $_POST['senha'];
-    $cliente = $clienteController->buscarPorCPF($cpf);
-    if ($cliente && $cliente['senha'] == $senha) {
-        echo 'Bem-vindo, ' . $cliente['nome'];
-    } else {
-        echo 'Login ou senha incorretos.';
-    }
-}
-?>
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM Cliente VIP</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <?php include 'app/Views/layout/header_publico.php'; ?>
+    <title>Bem-vindo ao CRM Cliente VIP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 </head>
 
 <body>
-    <div class="container">
-        <div class="jumbotron text-center bg-success text-white">
+    <div class="container mt-5 text-center">
+        <div class="jumbotron bg-success text-white p-5 rounded shadow">
             <h1>Bem-vindo ao CRM Cliente VIP</h1>
-            <p>Gerencie seus clientes de forma eficiente e personalizada.</p>
-            <a href="login.php" class="btn btn-light">Acessar Conta</a>
-            <a href="registro.php" class="btn btn-light">Cadastre-se</a>
+            <p class="lead">Gerencie seus clientes de forma eficiente e personalizada.</p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="app/Views/cliente/login.php" class="btn btn-light btn-lg">Acessar Conta</a>
+                <a href="app/Views/cliente/registro.php" class="btn btn-light btn-lg">Cadastre-se</a>
+            </div>
         </div>
+
         <div class="row text-center mt-5">
             <div class="col-md-4">
                 <h2>Gestão de Clientes</h2>
@@ -51,6 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             </div>
         </div>
     </div>
+
+    <?php include 'app/Views/layout/footer.php'; ?>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 
 </html>
