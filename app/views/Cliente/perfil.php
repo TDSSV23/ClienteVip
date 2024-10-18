@@ -1,32 +1,101 @@
 <?php
-
-session_start(); // Inicia a sessão
-
-// Verificar se existe o cliente na sessão
-if (!isset($_SESSION['cliente'])) {
-    echo 'Cliente não encontrado na sessão. Redirecionando para login...';
-    header('Location: login.php');
-    exit();
-}
-
-// Recupera o CPF da sessão
-$cliente = $_SESSION['cliente'];
-$cpf = $cliente['cpf'];
-
 require_once '../../models/Cliente.php';
 require_once '../../controllers/ClienteController.php';
 
+session_start(); // Inicia a sessão
+
+// Verificar se existe uma sessão ou cookie de CPF válido
+if (!isset($_SESSION['cpf']) && !isset($_COOKIE['cpf'])) {
+    header('Location: ../cliente/login.php'); // Redireciona para login
+    exit();
+}
+
+// Restaurar sessão do cookie se necessário
+if (!isset($_SESSION['cpf']) && isset($_COOKIE['cpf'])) {
+    $_SESSION['cpf'] = $_COOKIE['cpf'];
+}
+
+// Instanciar modelo e controlador
 $model = new ClienteModel();
 $controller = new ClienteController($model);
 
-// Buscar o cliente no banco de dados com o CPF
+// Buscar cliente pelo CPF na sessão
+$cpf = $_SESSION['cpf'];
 $cliente = $controller->buscarPorCPF($cpf);
 
 if (!$cliente) {
-    echo 'Cliente não encontrado. Redirecionando para login...';
-    header('Location: login.php');
+    echo '<div class="alert alert-danger text-center mt-4">Erro: Cliente não encontrado.</div>';
     exit();
 }
+
+// Lógica para alteração de senha ou atualização de dados via AJAX
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    header('Content-Type: application/json'); // Define o cabeçalho para JSON
+
+    try {
+        // Alteração de senha
+        if (isset($_POST['nova_senha'])) {
+            $novaSenha = $_POST['nova_senha'];
+            if ($controller->redefinirSenha($cpf, $novaSenha)) {
+                echo json_encode(['success' => true, 'message' => 'Senha alterada com sucesso.']);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Erro ao alterar a senha.']);
+            }
+            exit();
+        }
+
+        // Atualização dos dados do cliente
+        $dadosAtualizados = [
+            'nome' => $_POST['nome'],
+            'telefone' => $_POST['telefone'],
+            'email' => $_POST['email'],
+            'endereco' => $_POST['endereco'],
+            'idade' => $_POST['idade'],
+            'genero' => $_POST['genero']
+        ];
+
+        if ($controller->atualizarCliente($cpf, $dadosAtualizados)) {
+            echo json_encode(['success' => true, 'message' => 'Dados atualizados com sucesso.']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Erro ao atualizar os dados.']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Erro interno: ' . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    header('Content-Type: application/json'); // Retorna JSON
+
+    try {
+        if (isset($_POST['nova_senha'])) {
+            $novaSenha = $_POST['nova_senha'];
+            $senhaAtual = $_POST['senha_atual'];
+
+            // Verifica se a senha atual é válida
+            if ($model->verificarSenhaAtual($cpf, $senhaAtual)) {
+                if ($controller->redefinirSenha($cpf, $novaSenha)) {
+                    echo json_encode(['success' => true, 'message' => 'Senha alterada com sucesso.']);
+                } else {
+                    echo json_encode(['success' => false, 'message' => 'Erro ao alterar a senha.']);
+                }
+            } else {
+                echo json_encode(['success' => false, 'message' => 'Senha atual incorreta.']);
+            }
+            exit();
+        }
+
+        // Lógica de atualização dos dados do cliente permanece igual
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => 'Erro interno: ' . $e->getMessage()]);
+    }
+
+    exit();
+}
+
+
 ?>
 
 <!DOCTYPE html>
@@ -34,20 +103,164 @@ if (!$cliente) {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Perfil do Cliente</title>
+    <link rel="stylesheet" href="../../../public/css/Perfil.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 
 <body>
-    <h1>Perfil do Cliente</h1>
-    <p><strong>Nome:</strong> <?php echo htmlspecialchars($cliente['nome']); ?></p>
-    <p><strong>Email:</strong> <?php echo htmlspecialchars($cliente['email']); ?></p>
-    <p><strong>CPF:</strong> <?php echo htmlspecialchars($cliente['cpf']); ?></p>
-    <p><strong>Telefone:</strong> <?php echo htmlspecialchars($cliente['telefone']); ?></p>
-    <p><strong>Endereço:</strong> <?php echo htmlspecialchars($cliente['endereco']); ?></p>
-    <p><strong>Idade:</strong> <?php echo htmlspecialchars($cliente['idade']); ?></p>
-    <p><strong>Gênero:</strong> <?php echo htmlspecialchars($cliente['genero']); ?></p>
-    <p><strong>Senha:</strong> <?php echo htmlspecialchars($cliente['senha']); ?></p>
-    <!-- Outros dados do cliente... -->
+    <?php include '../layout/header_logado.php'; ?>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="list-group shadow-sm">
+                    <a href="#" class="list-group-item active">Informações pessoais</a>
+                    <a href="#" class="list-group-item">Status do trabalho</a>
+                    <a href="#" class="list-group-item">Notificações</a>
+                    <a href="#" class="list-group-item">Idioma e região</a>
+                    <a href="#" class="list-group-item">Senha</a>
+                    <a href="#" class="list-group-item">Histórico da sessão</a>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card card-profile shadow-sm">
+                    <div class="card-body">
+                        <div class="text-center mb-4">
+                            <h3 class="mt-3"><?php echo htmlspecialchars($cliente['nome']); ?></h3>
+                            <p class="text-muted">Membro</p>
+                        </div>
+
+                        <!-- Div para exibir feedback de sucesso ou erro -->
+                        <div id="mensagem" class="alert" style="display:none;"></div>
+
+                        <!-- Profile Information -->
+                        <div class="info-item">
+                            <i class="fas fa-envelope"></i>
+                            <strong>Email:</strong>
+                            <span><?php echo htmlspecialchars($cliente['email']); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="fas fa-phone"></i>
+                            <strong>Telefone:</strong>
+                            <span><?php echo htmlspecialchars($cliente['telefone']); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="fas fa-id-card Parede_Informacao"></i>
+                            <strong>CPF:</strong>
+                            <span><?php echo htmlspecialchars($cliente['cpf']); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <strong>Endereço:</strong>
+                            <span><?php echo htmlspecialchars($cliente['endereco']); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="fas fa-birthday-cake Parede_Informacao"></i>
+                            <strong class="">Idade:</strong>
+                            <span><?php echo htmlspecialchars($cliente['idade']); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="fas fa-venus-mars Parede_Informacao2"></i>
+                            <strong class="">Gênero:</strong>
+                            <span><?php echo htmlspecialchars($cliente['genero']); ?></span>
+                        </div>
+
+                        <!-- Button to trigger the edit form -->
+                        <button type="button" class="btn btn-primary mt-3" id="editarInformacoesBtn">
+                            Editar Informações
+                        </button>
+
+                        <!-- Formulário de Edição (escondido por padrão) -->
+                        <div id="formEdicao" style="display: none; margin-top: 20px;">
+                            <form id="editarClienteForm">
+                                <div class="mb-3">
+                                    <label for="nome" class="form-label">Nome</label>
+                                    <input type="text" class="form-control" id="nome" name="nome" value="<?php echo htmlspecialchars($cliente['nome']); ?>" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email</label>
+                                    <input type="email" class="form-control" id="email" name="email" value="<?php echo htmlspecialchars($cliente['email']); ?>" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="telefone" class="form-label">Telefone</label>
+                                    <input type="text" class="form-control" id="telefone" name="telefone" value="<?php echo htmlspecialchars($cliente['telefone']); ?>" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="endereco" class="form-label">Endereço</label>
+                                    <input type="text" class="form-control" id="endereco" name="endereco" value="<?php echo htmlspecialchars($cliente['endereco']); ?>" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="idade" class="form-label">Idade</label>
+                                    <input type="number" class="form-control" id="idade" name="idade" value="<?php echo htmlspecialchars($cliente['idade']); ?>" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="genero" class="form-label">Gênero</label>
+                                    <select class="form-control" id="genero" name="genero" required>
+                                        <option value="M" <?php echo ($cliente['genero'] == 'M') ? 'selected' : ''; ?>>Masculino</option>
+                                        <option value="F" <?php echo ($cliente['genero'] == 'F') ? 'selected' : ''; ?>>Feminino</option>
+                                    </select>
+                                </div>
+
+                                <button type="submit" class="btn btn-success">Salvar Alterações</button>
+                            </form>
+                        </div>
+
+                        <!-- Nova Seção de Alteração de Senha -->
+                        <div class="col-lg-8" id="secaoSenha" style="display: none;">
+                            <div class="card card-profile shadow-sm">
+                                <div class="card-body">
+                                    <h3 class="text-center">Alterar Senha</h3>
+
+                                    <div id="mensagemSenha" class="alert" style="display:none;"></div>
+
+                                    <form id="alterarSenhaForm">
+                                        <div class="mb-3">
+                                            <label for="senhaAtual" class="form-label">Senha Atual</label>
+                                            <input type="password" class="form-control" id="senhaAtual" name="senha_atual" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="novaSenha" class="form-label">Nova Senha</label>
+                                            <input type="password" class="form-control" id="novaSenha" name="nova_senha" required>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label for="confirmarSenha" class="form-label">Confirmar Nova Senha</label>
+                                            <input type="password" class="form-control" id="confirmarSenha" name="confirmar_senha" required>
+                                        </div>
+
+                                        <!-- Botão para alternar visibilidade da senha -->
+                                        <button type="button" class="btn btn-outline-primary" id="toggleNovaSenha">Mostrar senha</button>
+
+                                        <button type="submit" class="btn btn-success mt-3">Alterar Senha</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script para exibir/ocultar formulário e fazer o envio via AJAX -->
+    <script src="../../../public/js/Perfil.js"></script> <!-- Script externo -->
 </body>
 
 </html>
