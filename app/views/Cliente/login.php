@@ -42,36 +42,31 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     <?php include '../layout/header_publico.php'; ?>
     <title>Login</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../../public/css/Login.css">
 </head>
 
 <body>
-
-    <div class="container mt-5">
-        <h1 class="text-center">Login</h1>
-        <form method="post" action="">
-            <div class="mb-3">
-                <label for="cpf" class="form-label">CPF</label>
-                <input type="text" class="form-control" name="cpf" placeholder="CPF" required>
-            </div>
-            <div class="mb-3">
-                <label for="senha" class="form-label">Senha</label>
-                <input type="password" class="form-control" name="senha" placeholder="Senha" required>
-            </div>
-            <button type="submit" class="btn btn-primary">Entrar</button>
-        </form>
-
-        <div class="mt-4">
-            <h4>Esqueceu sua senha?</h4>
-            <form method="post" action="">
-                <div class="mb-3">
-                    <label for="cpf_redefinir" class="form-label">Digite seu CPF para redefinir a senha</label>
-                    <input type="text" class="form-control" name="cpf_redefinir" placeholder="CPF" required>
+    <div class="container-fluid p-0">
+        <div class="form-container">
+            <div class="login-form">
+                <h1 class="text-center mb-4">Login</h1>
+                <form method="post" action="">
+                    <div class="mb-3">
+                        <label for="cpf" class="form-label">CPF</label>
+                        <input type="text" class="form-control" name="cpf" placeholder="CPF" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="senha" class="form-label">Senha</label>
+                        <input type="password" class="form-control" name="senha" placeholder="Senha" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Entrar</button>
+                </form>
+                <div class="mt-4 text-center">
+                    <a href="#">Esqueceu sua senha?</a>
                 </div>
-                <button type="submit" class="btn btn-warning">Redefinir Senha</button>
-            </form>
+            </div>
         </div>
     </div>
-
     <?php include '../layout/footer.php'; ?>
 </body>
 

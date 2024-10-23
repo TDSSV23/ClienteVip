@@ -1,5 +1,4 @@
 <?php
-require_once('../models/Cliente.php');
 
 class ClienteController
 {
@@ -46,12 +45,12 @@ class ClienteController
     public function redefinirSenha($cpf, $senhaAtual, $novaSenha)
     {
         try {
-            // Validar entradas
+            // Verifica se o CPF e as senhas foram fornecidos
             if (empty($cpf) || empty($senhaAtual) || empty($novaSenha)) {
                 return ['success' => false, 'message' => 'Todos os campos são obrigatórios.'];
             }
 
-            // Chama o método verificarSenhaAtual do modelo
+            // Verifica se a senha atual está correta
             if ($this->model->verificarSenhaAtual($cpf, $senhaAtual)) {
                 // Gera o hash da nova senha
                 $novaSenhaHash = password_hash($novaSenha, PASSWORD_DEFAULT);
@@ -67,7 +66,7 @@ class ClienteController
                 return ['success' => false, 'message' => 'Senha atual incorreta.'];
             }
         } catch (Exception $e) {
-            return ['success' => false, 'message' => $e->getMessage()];
+            return ['success' => false, 'message' => 'Erro ao redefinir senha: ' . $e->getMessage()];
         }
     }
 

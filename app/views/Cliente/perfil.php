@@ -1,6 +1,8 @@
 <?php
-require_once '../../models/Cliente.php';
-require_once '../../controllers/ClienteController.php';
+require_once '../../../config/db.php';
+require_once '../../Models/Database.php';
+require_once '../../Models/Cliente.php';
+require_once '../../Controllers/ClienteController.php';
 
 session_start(); // Inicia a sessão
 
@@ -33,14 +35,16 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     header('Content-Type: application/json'); // Define o cabeçalho para JSON
 
     try {
-        // Alteração de senha
-        if (isset($_POST['nova_senha'])) {
+        // Alteração de senha com verificação da senha atual
+        if (isset($_POST['nova_senha']) && isset($_POST['senha_atual'])) {
             $novaSenha = $_POST['nova_senha'];
-            if ($controller->redefinirSenha($cpf, $novaSenha)) {
-                echo json_encode(['success' => true, 'message' => 'Senha alterada com sucesso.']);
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Erro ao alterar a senha.']);
-            }
+            $senhaAtual = $_POST['senha_atual'];
+
+            // Chama o método redefinirSenha no Controller
+            $resultado = $controller->redefinirSenha($cpf, $senhaAtual, $novaSenha);
+
+            // Retorna a resposta em JSON com o resultado
+            echo json_encode($resultado);
             exit();
         }
 
@@ -66,36 +70,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    header('Content-Type: application/json'); // Retorna JSON
-
-    try {
-        if (isset($_POST['nova_senha'])) {
-            $novaSenha = $_POST['nova_senha'];
-            $senhaAtual = $_POST['senha_atual'];
-
-            // Verifica se a senha atual é válida
-            if ($model->verificarSenhaAtual($cpf, $senhaAtual)) {
-                if ($controller->redefinirSenha($cpf, $novaSenha)) {
-                    echo json_encode(['success' => true, 'message' => 'Senha alterada com sucesso.']);
-                } else {
-                    echo json_encode(['success' => false, 'message' => 'Erro ao alterar a senha.']);
-                }
-            } else {
-                echo json_encode(['success' => false, 'message' => 'Senha atual incorreta.']);
-            }
-            exit();
-        }
-
-        // Lógica de atualização dos dados do cliente permanece igual
-    } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => 'Erro interno: ' . $e->getMessage()]);
-    }
-
-    exit();
-}
-
-
 ?>
 
 <!DOCTYPE html>
@@ -118,17 +92,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <div class="row">
             <div class="col-lg-4">
                 <div class="list-group shadow-sm">
-                    <a href="#" class="list-group-item active">Informações pessoais</a>
-                    <a href="#" class="list-group-item">Status do trabalho</a>
-                    <a href="#" class="list-group-item">Notificações</a>
-                    <a href="#" class="list-group-item">Idioma e região</a>
-                    <a href="#" class="list-group-item">Senha</a>
-                    <a href="#" class="list-group-item">Histórico da sessão</a>
+                    <a href="#" class="list-group-item active" id="btnInformacoes">Informações pessoais</a>
+                    <a href="#" class="list-group-item" id="btnSenha">Senha</a>
                 </div>
             </div>
 
             <div class="col-lg-8">
-                <div class="card card-profile shadow-sm">
+                <!-- Seção de informações pessoais -->
+                <div class="card card-profile shadow-sm" id="secaoInformacoes">
                     <div class="card-body">
                         <div class="text-center mb-4">
                             <h3 class="mt-3"><?php echo htmlspecialchars($cliente['nome']); ?></h3>
@@ -161,6 +132,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <i class="fas fa-map-marker-alt"></i>
                             <strong>Endereço:</strong>
                             <span><?php echo htmlspecialchars($cliente['endereco']); ?></span>
+                        </div>
+
+                        <div class="info-item">
+                            <i class="fas fa-lock"></i>
+                            <strong>Senha:</strong>
+                            <span>*****</span>
                         </div>
 
                         <div class="info-item">
@@ -219,48 +196,44 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                                 <button type="submit" class="btn btn-success">Salvar Alterações</button>
                             </form>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Nova Seção de Alteração de Senha -->
-                        <div class="col-lg-8" id="secaoSenha" style="display: none;">
-                            <div class="card card-profile shadow-sm">
-                                <div class="card-body">
-                                    <h3 class="text-center">Alterar Senha</h3>
+                <!-- Seção de alteração de senha -->
+                <div class="card card-profile shadow-sm" id="secaoSenha" style="display: none;">
+                    <div class="card-body">
+                        <h3 class="text-center">Alterar Senha</h3>
 
-                                    <div id="mensagemSenha" class="alert" style="display:none;"></div>
+                        <div id="mensagemSenha" class="alert" style="display: none;"></div>
 
-                                    <form id="alterarSenhaForm">
-                                        <div class="mb-3">
-                                            <label for="senhaAtual" class="form-label">Senha Atual</label>
-                                            <input type="password" class="form-control" id="senhaAtual" name="senha_atual" required>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="novaSenha" class="form-label">Nova Senha</label>
-                                            <input type="password" class="form-control" id="novaSenha" name="nova_senha" required>
-                                        </div>
-
-                                        <div class="mb-3">
-                                            <label for="confirmarSenha" class="form-label">Confirmar Nova Senha</label>
-                                            <input type="password" class="form-control" id="confirmarSenha" name="confirmar_senha" required>
-                                        </div>
-
-                                        <!-- Botão para alternar visibilidade da senha -->
-                                        <button type="button" class="btn btn-outline-primary" id="toggleNovaSenha">Mostrar senha</button>
-
-                                        <button type="submit" class="btn btn-success mt-3">Alterar Senha</button>
-                                    </form>
+                        <form id="alterarSenhaForm">
+                            <!-- Campo de Nova Senha -->
+                            <div class="mb-3">
+                                <label for="novaSenha" class="form-label">Nova Senha</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" id="novaSenha" name="nova_senha" required>
+                                    <span class="input-group-text">
+                                        <i class="fas fa-eye" id="toggleNovaSenha"></i>
+                                    </span>
                                 </div>
                             </div>
-                        </div>
 
+                            <!-- Confirmar Nova Senha -->
+                            <div class="mb-3">
+                                <label for="confirmarSenha" class="form-label">Confirmar Nova Senha</label>
+                                <input type="password" class="form-control" id="confirmarSenha" name="confirmar_senha" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-success mt-3">Alterar Senha</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Script para exibir/ocultar formulário e fazer o envio via AJAX -->
-    <script src="../../../public/js/Perfil.js"></script> <!-- Script externo -->
+    <!-- Script para exibir/ocultar seções e enviar formulários via AJAX -->
+    <script src="../../../public/js/Perfil.js"></script>
 </body>
 
 </html>

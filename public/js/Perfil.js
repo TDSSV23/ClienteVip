@@ -1,116 +1,103 @@
-// Função para alternar a visibilidade da senha
-function togglePassword() {
-    const passwordField = document.getElementById('password');
-    const passwordBtn = document.querySelector('.btn-outline-primary');
+// Função para alternar a visibilidade de uma senha
+function togglePassword(inputId, iconId) {
+    const passwordInput = document.getElementById(inputId);
+    const toggleIcon = document.getElementById(iconId);
 
-    if (passwordField.textContent === '******') {
-        passwordField.textContent = passwordField.getAttribute('data-password');  // Exibe a senha oculta
-        passwordBtn.textContent = 'Ocultar senha';
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.classList.replace('fa-eye', 'fa-eye-slash');
     } else {
-        passwordField.textContent = '******';  // Oculta a senha novamente
-        passwordBtn.textContent = 'Mostrar senha';
+        passwordInput.type = 'password';
+        toggleIcon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    var editarBtn = document.getElementById('editarInformacoesBtn');
-    var formEdicao = document.getElementById('formEdicao');
-    var mensagemDiv = document.getElementById('mensagem');
-    var editarClienteForm = document.getElementById('editarClienteForm');
-    var btnInformacoes = document.getElementById('btnInformacoes');
-    var btnSenha = document.getElementById('btnSenha');
-    var secaoInformacoes = document.getElementById('secaoInformacoes');
-    var secaoSenha = document.getElementById('secaoSenha');
-    var alterarSenhaForm = document.getElementById('alterarSenhaForm');
-    var mensagemSenhaDiv = document.getElementById('mensagemSenha');
-    var toggleNovaSenhaBtn = document.getElementById('toggleNovaSenha');
-    var novaSenhaField = document.getElementById('novaSenha');
+    const btnInformacoes = document.getElementById('btnInformacoes');
+    const btnSenha = document.getElementById('btnSenha');
+    const secaoInformacoes = document.getElementById('secaoInformacoes');
+    const secaoSenha = document.getElementById('secaoSenha');
+    const editarClienteForm = document.getElementById('editarClienteForm');
+    const alterarSenhaForm = document.getElementById('alterarSenhaForm');
+    const mensagemSenha = document.getElementById('mensagemSenha');
 
-    // Exibir/ocultar seções ao clicar nos botões
+    // Elementos para exibir/ocultar formulário de alteração de senha
+    const btnAlterarSenha = document.getElementById('btnAlterarSenha');
+    const formAlterarSenha = document.getElementById('formAlterarSenha');
+
+    // Alternar para "Informações Pessoais"
     btnInformacoes.addEventListener('click', function () {
         secaoInformacoes.style.display = 'block';
         secaoSenha.style.display = 'none';
-        btnInformacoes.classList.add('active');
-        btnSenha.classList.remove('active');
+        formAlterarSenha.style.display = 'none';  // Oculta o formulário de alteração de senha ao mudar de seção
     });
 
+    // Alternar para "Alterar Senha"
     btnSenha.addEventListener('click', function () {
-        secaoSenha.style.display = 'block';
         secaoInformacoes.style.display = 'none';
-        btnSenha.classList.add('active');
-        btnInformacoes.classList.remove('active');
+        secaoSenha.style.display = 'block';
     });
 
-    // Exibir/ocultar o formulário de edição de informações
-    editarBtn.addEventListener('click', function () {
-        formEdicao.style.display = formEdicao.style.display === 'none' ? 'block' : 'none';
+    // Exibir/ocultar o formulário de alteração de senha ao clicar no botão
+    btnAlterarSenha.addEventListener('click', function () {
+        formAlterarSenha.style.display = formAlterarSenha.style.display === 'none' ? 'block' : 'none';
     });
 
-    // Função para alternar visibilidade da nova senha
-    toggleNovaSenhaBtn.addEventListener('click', function () {
-        if (novaSenhaField.type === 'password') {
-            novaSenhaField.type = 'text'; // Exibe a senha
-            toggleNovaSenhaBtn.textContent = 'Ocultar senha';
-        } else {
-            novaSenhaField.type = 'password'; // Oculta a senha
-            toggleNovaSenhaBtn.textContent = 'Mostrar senha';
-        }
+    // Alternar visibilidade da senha atual
+    document.getElementById('toggleSenhaAtual').addEventListener('click', function () {
+        togglePassword('senhaAtual', 'toggleSenhaAtual');
     });
 
-    // Enviar o formulário de alteração de informações pessoais via AJAX
+    // Alternar visibilidade da nova senha
+    document.getElementById('toggleNovaSenha').addEventListener('click', function () {
+        togglePassword('novaSenha', 'toggleNovaSenha');
+    });
+
+    // Envio do formulário de edição de informações via AJAX
     editarClienteForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var formData = new FormData(editarClienteForm);
+        e.preventDefault();  // Evita o reload da página
+        const formData = new FormData(editarClienteForm);
 
         fetch('', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: { 'Accept': 'application/json' }
         })
             .then(response => response.json())
             .then(data => {
-                mensagemDiv.style.display = 'block';
-                if (data.success) {
-                    mensagemDiv.className = 'alert alert-success';
-                    mensagemDiv.textContent = data.message;
-                    formEdicao.style.display = 'none';
-                } else {
-                    mensagemDiv.className = 'alert alert-danger';
-                    mensagemDiv.textContent = data.message;
-                }
+                mostrarMensagem(data.message, data.success ? 'success' : 'danger');
+                if (data.success) window.location.reload();  // Recarrega a página após sucesso
             })
-            .catch(error => {
-                mensagemDiv.style.display = 'block';
-                mensagemDiv.className = 'alert alert-danger';
-                mensagemDiv.textContent = 'Erro na requisição: ' + error;
-            });
+            .catch(error => mostrarMensagem('Erro ao atualizar informações.', 'danger'));
     });
 
-    // Enviar o formulário de alteração de senha via AJAX
+    // Envio do formulário de alteração de senha via AJAX
     alterarSenhaForm.addEventListener('submit', function (e) {
-        e.preventDefault();
-        var formData = new FormData(alterarSenhaForm);
+        e.preventDefault();  // Evita o reload da página
+        const formData = new FormData(alterarSenhaForm);
 
-        fetch('', { // Requisição para a própria página
+        fetch('', {
             method: 'POST',
-            body: formData
+            body: formData,
+            headers: { 'Accept': 'application/json' }
         })
             .then(response => response.json())
             .then(data => {
-                mensagemSenhaDiv.style.display = 'block';
-                if (data.success) {
-                    mensagemSenhaDiv.className = 'alert alert-success';
-                    mensagemSenhaDiv.textContent = data.message;
-                    alterarSenhaForm.reset(); // Limpar o formulário após sucesso
-                } else {
-                    mensagemSenhaDiv.className = 'alert alert-danger';
-                    mensagemSenhaDiv.textContent = data.message;
-                }
+                mostrarMensagem(data.message, data.success ? 'success' : 'danger');
+                if (data.success) alterarSenhaForm.reset();  // Limpa o formulário após sucesso
             })
-            .catch(error => {
-                mensagemSenhaDiv.style.display = 'block';
-                mensagemSenhaDiv.className = 'alert alert-danger';
-                mensagemSenhaDiv.textContent = 'Erro na requisição: ' + error;
-            });
+            .catch(error => mostrarMensagem('Erro ao alterar senha.', 'danger'));
     });
-});
 
+    // Função para exibir mensagens de feedback
+    function mostrarMensagem(mensagem, tipo) {
+        mensagemSenha.textContent = mensagem;
+        mensagemSenha.className = `alert alert-${tipo}`;
+        mensagemSenha.style.display = 'block';
+
+        // Ocultar mensagem após 3 segundos
+        setTimeout(() => {
+            mensagemSenha.style.display = 'none';
+        }, 3000);
+    }
+});

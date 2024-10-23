@@ -1,6 +1,5 @@
 <?php
 
-require_once 'Database.php'; // Certifique-se de que este caminho está correto.
 
 class ClienteModel
 {
@@ -73,6 +72,8 @@ class ClienteModel
             throw new Exception('Erro ao buscar cliente: ' . $e->getMessage());
         }
     }
+
+
 
     // Função para atualizar a senha do cliente
     public function atualizarSenha($cpf, $novaSenhaHash)
