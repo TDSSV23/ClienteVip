@@ -18,12 +18,19 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'genero' => $_POST['genero'],
         'senha' => $_POST['senha']
     ];
-    if ($clienteController->cadastrar($dados)) {
+
+    $resultado = $clienteController->cadastrar($dados);
+
+    if ($resultado['success']) {
         header('Location: login.php');
         exit();
+    } else {
+        echo '<p>' . $resultado['message'] . '</p>';
     }
 }
 ?>
+
+
 <!DOCTYPE html>
 <html lang="pt-br">
 

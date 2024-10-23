@@ -1,35 +1,79 @@
 <?php
-class NegocioController
-{
-    private $model;
 
-    public function __construct($model)
+class LeadModel
+{
+    private $db;
+
+    public function __construct()
     {
-        $this->model = $model;
+        $this->db = new Database();
     }
 
-    public function criarNegocio($dados)
+    // Função para cadastrar um novo lead
+    public function cadastrarLead($dados)
     {
-        if ($this->model->criarNegocio($dados)) {
-            return true;
-        } else {
-            echo '<div class="alert alert-danger">Erro ao criar negócio.</div>';
-            return false;
+        // Monta a query para inserir o lead no banco de dados
+        $this->db->query('INSERT INTO lead (nome, status, empresa, cargo, telefone, criado_em) 
+                          VALUES (:nome, :status, :empresa, :cargo, :telefone, :criado_em)');
+
+        // Bind dos parâmetros
+        $this->db->bind(':nome', $dados['nome']);
+        $this->db->bind(':status', $dados['status']);
+        $this->db->bind(':empresa', $dados['empresa']);
+        $this->db->bind(':cargo', $dados['cargo']);
+        $this->db->bind(':telefone', $dados['telefone']);
+        $this->db->bind(':criado_em', date('Y-m-d H:i:s'));
+
+        try {
+            return $this->db->execute();
+        } catch (Exception $e) {
+            throw new Exception('Erro ao cadastrar lead: ' . $e->getMessage());
         }
     }
 
-    public function obterNegocios()
+    // Função para buscar um lead pelo ID
+    public function buscarLeadPorID($id)
     {
-        return $this->model->obterNegocios();
+        $this->db->query('SELECT * FROM lead WHERE id = :id');
+        $this->db->bind(':id', $id);
+
+        try {
+            return $this->db->single();
+        } catch (Exception $e) {
+            throw new Exception('Erro ao buscar lead: ' . $e->getMessage());
+        }
     }
 
-    public function atualizarStatus($id, $status)
+    // Função para atualizar um lead
+    public function atualizarLead($id, $dados)
     {
-        if ($this->model->atualizarStatus($id, $status)) {
-            return true;
-        } else {
-            echo '<div class="alert alert-danger">Erro ao atualizar status.</div>';
-            return false;
+        $this->db->query('UPDATE lead SET nome = :nome, status = :status, empresa = :empresa, cargo = :cargo, telefone = :telefone 
+                          WHERE id = :id');
+
+        // Bind dos parâmetros
+        $this->db->bind(':nome', $dados['nome']);
+        $this->db->bind(':status', $dados['status']);
+        $this->db->bind(':empresa', $dados['empresa']);
+        $this->db->bind(':cargo', $dados['cargo']);
+        $this->db->bind(':telefone', $dados['telefone']);
+        $this->db->bind(':id', $id);
+
+        try {
+            return $this->db->execute();
+        } catch (Exception $e) {
+            throw new Exception('Erro ao atualizar lead: ' . $e->getMessage());
+        }
+    }
+
+    // Função para listar todos os leads
+    public function listarLeads()
+    {
+        $this->db->query('SELECT * FROM lead');
+
+        try {
+            return $this->db->resultSet();
+        } catch (Exception $e) {
+            throw new Exception('Erro ao listar leads: ' . $e->getMessage());
         }
     }
 }

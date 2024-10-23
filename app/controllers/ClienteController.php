@@ -12,21 +12,28 @@ class ClienteController
     public function cadastrar($dados)
     {
         try {
-            if ($this->model->buscarClientePorCPF($dados['cpf'])) {
-                return ['success' => false, 'message' => 'CPF já cadastrado.'];
-            }
-
+            // Criptografa a senha
             $dados['senha'] = password_hash($dados['senha'], PASSWORD_DEFAULT);
 
+            // Tenta cadastrar o cliente
             if ($this->model->cadastrarCliente($dados)) {
+                // Exibe a mensagem de sucesso e oculta após 5 segundos
+                echo '<div id="success-message" class="alert alert-success text-center mt-4">Cliente cadastrado com sucesso.</div>';
+                echo '<script>setTimeout(function() { document.getElementById("success-message").style.display = "none"; }, 5000);</script>';
                 return ['success' => true, 'message' => 'Cliente cadastrado com sucesso.'];
             } else {
-                return ['success' => false, 'message' => 'Erro ao cadastrar cliente.'];
+                // Exibe a mensagem de erro e oculta após 5 segundos
+                return ['success' => false, 'message' => 'echo'<'div id="error-message" class="alert alert-danger text-center mt-4">Erro ao cadastrar cliente.</div>'];
+                echo '<script>setTimeout(function() { document.getElementById("error-message").style.display = "none"; }, 5000);</script>';
             }
         } catch (Exception $e) {
+            // Exibe a mensagem de erro e oculta após 5 segundos
+            echo '<div id="error-message" class="alert alert-danger text-center mt-4">Erro ao cadastrar cliente: ' . htmlspecialchars($e->getMessage()) . '</>';
+            echo '<script>setTimeout(function() { document.getElementById("error-message").style.display = "none"; }, 5000);</script>';
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+
 
     public function buscarPorCPF($cpf)
     {
